@@ -1,0 +1,38 @@
+version: '3.4'
+services:
+    your-dream-company-traefik:
+        image: traefik:v2.3.3
+        container_name: your-dream-company-traefik-001
+        hostname: your-dream-company-traefik
+        networks:
+            - "your-dream-company-001"
+            - "your-dream-company-wordpress-001"
+        ports:
+            - "80:80"
+            - "443:443"
+            - "127.0.0.1:8088:8080"
+        volumes:
+            - ./letsencrypt:/letsencrypt
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        command:
+           #- "--log.level=DEBUG"
+            - "--api.insecure=true"
+            - "--providers.docker=true"
+            - "--providers.docker.exposedbydefault=false"
+            - "--entrypoints.web.address=:80"
+            - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+            - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+            - "--entrypoints.websecure.address=:443"
+
+            - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+            - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+            #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+            - "--certificatesresolvers.myresolver.acme.email=postmaster@your-dream-company.com"
+            - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+        restart: unless-stopped
+
+networks:
+  your-dream-company-001:
+    external: true
+  your-dream-company-wordpress-001:
+    external: true

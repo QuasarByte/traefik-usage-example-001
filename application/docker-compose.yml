@@ -1,0 +1,45 @@
+version: '3.4'
+services:
+
+    your-dream-company-api-gateway:
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.your-dream-company-api-gateway.rule=Host(`app.your-dream-company.com`)"
+            - "traefik.http.routers.your-dream-company-api-gateway.entrypoints=websecure"
+            - "traefik.http.routers.your-dream-company-api-gateway.tls.certresolver=myresolver"
+        image: your-dream-company-openjdk-15.0.1_linux-x64-001
+        container_name: your-dream-company-api-gateway-001
+        hostname: your-dream-company-api-gateway
+        networks:
+            - "your-dream-company-001"
+        ports:
+            - "127.0.0.1:8080:8080"
+        volumes:
+            - ./opt/your-dream-company/api-gateway/:/opt/your-dream-company/api-gateway
+        deploy:
+            resources:
+                limits:
+                    memory: "300M"
+        entrypoint: [
+                     "/opt/java/bin/java",
+                     "-server",
+                     "-verbose:gc",
+                     "-Xlog:gc:/opt/your-dream-company/api-gateway/log/gc.log",
+                     "-Xms128m",
+                     "-Xmx256m",
+                     "-XX:+UseContainerSupport",
+                     "-Djava.net.preferIPv4Stack=true",
+                     "-Djava.awt.headless=true",
+                     "--add-opens",
+                     "java.base/jdk.internal.misc=ALL-UNNAMED",
+                     "-Dio.netty.tryReflectionSetAccessible=true",
+                     "-jar",
+                     "/opt/your-dream-company/api-gateway/api-gateway-1.0.0.0.jar",
+                     "--spring.config.location=/opt/your-dream-company/api-gateway/application.yml",
+                     "--logging.config=/opt/your-dream-company/api-gateway/logback.xml"
+                    ]
+        restart: unless-stopped
+
+networks:
+  your-dream-company-001:
+    external: true

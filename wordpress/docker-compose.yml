@@ -1,0 +1,61 @@
+version: '3.4'
+
+services:
+
+    your-dream-company-wordpress-mysql:
+        image: mariadb:10.4.7
+        container_name: your-dream-company-wordpress-mysql-001
+        hostname: your-dream-company-wordpress-mysql
+        environment:
+            - MYSQL_DATABASE=wordpress
+            - MYSQL_ROOT_PASSWORD=password
+            - MYSQL_USER=wordpress
+            - MYSQL_PASSWORD=password
+            - MYSQL_ROOT_HOST=%
+        networks:
+            - your-dream-company-wordpress-001
+        ports:
+            - "127.0.0.1:13307:3306"
+        volumes:
+            - your-dream-company-wordpress-mysql-var-lib-mysql:/var/lib/mysql
+            - your-dream-company-wordpress-mysql-var-log-mysql:/var/log/mysql
+            - ./mysql/etc/mysql/mariadb.conf.d/:/etc/mysql/mariadb.conf.d
+            - ./mysql/backup/:/var/opt/backup
+        restart: unless-stopped
+
+    your-dream-company-wordpress-wordpress:
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.your-dream-company-wordpress.rule=Host(`your-dream-company.com`)"
+            - "traefik.http.routers.your-dream-company-wordpress.entrypoints=websecure"
+            - "traefik.http.routers.your-dream-company-wordpress.tls.certresolver=myresolver"
+        image: wordpress:5.5.3-php7.4-apache
+        container_name: your-dream-company-wordpress-wordpress-001
+        hostname: your-dream-company-wordpress-wordpress
+        ports:
+            - "127.0.0.1:8089:80"
+        environment:
+            WORDPRESS_DB_HOST: your-dream-company-wordpress-mysql
+            WORDPRESS_DB_USER: wordpress
+            WORDPRESS_DB_PASSWORD: password
+            WORDPRESS_DB_NAME: wordpress
+        networks:
+            - your-dream-company-wordpress-001
+        volumes:
+            - your-dream-company-wordpress-wordpress-var-www-html:/var/www/html
+        restart: unless-stopped
+
+volumes:
+    your-dream-company-wordpress-wordpress-var-www-html:
+        external: true
+        name: your-dream-company-wordpress-wordpress-var-www-html-001
+    your-dream-company-wordpress-mysql-var-lib-mysql:
+        external: true
+        name: your-dream-company-wordpress-mysql-var-lib-mysql-001
+    your-dream-company-wordpress-mysql-var-log-mysql:
+        external: true
+        name: your-dream-company-wordpress-mysql-var-log-mysql-001
+
+networks:
+  your-dream-company-wordpress-001:
+    external: true
